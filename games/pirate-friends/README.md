@@ -1,6 +1,6 @@
 # Pirate Friends
 
-FriendSDK **v0.1.3** game. Your Rare Friend captains a pirate ship, and your Generations are the cannonballs.
+FriendSDK **v0.1.4** game. Your Rare Friend captains a pirate ship, and your Generations are the cannonballs.
 Load your hold with one confirmation, stake Generations against a rival captain, and fire until one ship sinks or
 one side runs dry. **The winner keeps the loser's entire stake.** Every shot fired is burned.
 
@@ -106,7 +106,7 @@ Measured with the bots in `bot.mjs` on the SDK mock harness (one run per line, f
 Net result of a win: `stake - fired + salvage`. Net result of a loss: `-stake`.
 
 The only SDK action used is `client.buy(kegs)`, the single confirmation. The Generations ledger, stakes, payouts and
-salvage are tracked inside the game frame for the runtime session and reset on reload, because SDK v0.1.3 has no
+salvage are tracked inside the game frame for the runtime session and reset on reload, because SDK v0.1.4 has no
 additional-currency, transfer or save API.
 
 ### How it connects to $RAREFRIENDS
@@ -117,7 +117,7 @@ would burn its RF, so every battle takes RF out of circulation. A battle against
 ### Capability gaps for a live version
 
 - **Real player vs player.** The SDK sandbox only allows network access to the Robinhood RPC, so matchmaking and a
-  live opponent are not possible inside SDK v0.1.3. Rivals are AI captains. A live version needs a match service
+  live opponent are not possible inside SDK v0.1.4. Rivals are AI captains. A live version needs a match service
   and an escrow contract holding both stakes.
 - **Skill-based payouts.** Paid outcomes must come from contracts, and aim is decided in the browser. A live version
   needs a server-verified or replay-verified battle result before the escrow pays out.
