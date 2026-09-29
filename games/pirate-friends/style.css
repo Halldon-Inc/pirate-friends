@@ -34,6 +34,7 @@
 .pf-stepper output{min-width:58px;text-align:center;font-weight:900}
 .pf-stepper .pf-primary{flex:1;min-width:190px}
 .pf-feedback{margin:8px 0 0!important;font-size:11px!important;opacity:.9}
+.pf-col{display:contents}
 .pf-rivals{list-style:none;margin:0;padding:0;display:grid;gap:7px}
 .pf-rivals li{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;background:#ffffff12;border-left:6px solid var(--rival)}
 .pf-rivals li div{flex:1;display:grid;min-width:0}
@@ -69,6 +70,7 @@
 .pf-touch{display:none}
 .pf-game .pf-fire{position:absolute;right:16px;bottom:120px;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8fab,#ff3d6e 60%,#b3123f);color:#fff;font:900 18px "Arial Black",system-ui;border:4px solid var(--ink);display:none;touch-action:none}
 @keyframes pf-pop{from{transform:translateX(-50%) scale(.8);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+@keyframes pf-rise{from{transform:scale(.9);opacity:0}}
 
 /* Result */
 .pf-result{position:absolute;inset:0;display:grid;place-items:center;padding:16px 16px 60px;background:#1a0a2e66}
@@ -98,11 +100,11 @@
 .pf-check{display:flex;gap:8px;align-items:center;margin:12px 0}
 
 @media (pointer:coarse){.pf-game .pf-fire{display:block}.pf-desktop{display:none}.pf-touch{display:inline}}
-@media (max-width:700px){
+@media (max-width:700px) and (min-aspect-ratio:1/1){
   .pf-logo span{font-size:40px;-webkit-text-stroke:2px var(--ink)}.pf-logo small{display:none}.pf-panel{width:52%;padding:10px}
   .pf-plate{width:190px}.pf-desktop{display:none}.pf-callout{white-space:normal;width:80%;text-align:center}
 }
-@media (max-width:520px){
+@media (max-width:520px) and (min-aspect-ratio:1/1){
   .pf-game{font-size:11px}
   .pf-logo{display:none}.pf-panel{inset:6px 6px 44px 6px;width:auto;border-width:2px;border-radius:12px;padding:8px}
   .pf-panel h2{font-size:12px;margin:8px 0 4px}.pf-stats strong{font-size:18px}.pf-stats div+div strong{font-size:14px}
@@ -117,3 +119,135 @@
 .pf-desperate{background:#ff3d6e;color:#fff}
 @keyframes pf-blink{50%{opacity:.4}}
 @media (prefers-reduced-motion:reduce){.pf-repair{animation:none}}
+
+/* Phones and touch: bigger SDK menu controls inside the game frame. */
+@media (max-aspect-ratio:1/1),(max-height:480px),(pointer:coarse){
+  .pf-game .rf-frame-scrim{padding:8px 8px 62px}
+  .pf-game .rf-frame-menu{font-size:14px}
+  .pf-game .rf-frame-menu-heading button{min-width:44px;min-height:44px}
+  .pf-game .rf-frame-menu-body button{min-height:44px;width:100%}
+  .pf-check{min-height:44px}.pf-check input{width:24px;height:24px;flex:none}
+  .pf-help table{font-size:13px}
+}
+
+/* Portrait frames: logo on top, HUD above and below the battle, which the camera centres full width. */
+@media (max-aspect-ratio:1/1){
+  .pf-harbor{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:10px 10px 60px}
+  .pf-logo{position:static;flex:none;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:10px;max-width:none;margin:2px auto 0;transform:rotate(-3deg)}
+  .pf-logo span{font-size:min(36px,8.6vw);-webkit-text-stroke:2px var(--ink);text-shadow:0 3px 0 var(--ink),0 0 24px #ff3d6e99}
+  .pf-logo span+span{margin-left:0}
+  .pf-logo small{display:none}
+  .pf-panel{position:static;flex:0 1 auto;min-height:0;width:auto;padding:12px;border-radius:16px}
+  .pf-panel h2{font-size:15px;margin:10px 0 6px}
+  .pf-stats span{font-size:12px}
+  .pf-powder p{font-size:13px}
+  .pf-stepper{gap:8px}
+  .pf-stepper button:not(.pf-primary){width:48px;min-height:48px;font-size:20px;padding:0}
+  .pf-stepper output{flex:1;font-size:16px}
+  .pf-stepper .pf-primary{flex:1 1 100%;min-width:0;min-height:48px;font-size:15px}
+  .pf-feedback{font-size:12px!important}
+  .pf-rivals{gap:8px}
+  .pf-rivals li{padding:8px 10px}
+  .pf-rivals span,.pf-rivals small{font-size:12px}
+  .pf-game .pf-battle{min-width:88px;min-height:52px;font-size:15px}
+  .pf-battle span{font-size:12px}
+  .pf-hint{font-size:13px}
+  .pf-row button{flex:1;min-height:44px}
+  .pf-record{flex:1 1 100%;margin:0;text-align:center;font-size:12px}
+
+  .pf-hud{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"you them" "center center" "callout callout";align-content:start;gap:8px;padding:10px}
+  .pf-plate{position:static;width:auto;padding:8px 10px;gap:5px;align-content:start}
+  .pf-you{grid-area:you}.pf-them{grid-area:them}
+  .pf-plate strong{font-size:13px;line-height:1.15}
+  .pf-plate span{font-size:12px}.pf-plate b{font-size:16px}.pf-bar{height:12px}
+  .pf-tag{font-size:11px;display:inline-block;margin-bottom:2px}
+  .pf-center{grid-area:center;position:static;transform:none;justify-self:center;display:flex;gap:8px;align-items:center}
+  .pf-wind{padding:6px 12px}.pf-wind span{font-size:12px}.pf-wind b{font-size:16px}
+  .pf-pot{font-size:14px;white-space:nowrap}
+  .pf-game .pf-center .pf-small{min-height:44px;padding:6px 16px;font-size:14px}
+  .pf-callout{grid-area:callout;position:static;transform:none;white-space:normal;text-align:center;font-size:14px;animation:pf-rise .25s ease-out}
+  .pf-aim{left:10px;right:108px;bottom:62px;transform:none;white-space:normal;font-size:13px;padding:6px 10px}
+  .pf-desktop{display:none}
+  .pf-game .pf-fire{right:12px;bottom:62px;width:84px;height:84px;font-size:18px}
+
+  .pf-result{padding:10px 10px 60px}
+  .pf-card{padding:16px}
+  .pf-card h2{font-size:40px}
+  .pf-card table{font-size:14px}
+  .pf-hits{font-size:13px}.pf-small-print{font-size:12px}
+  .pf-card .pf-row button{flex:1 1 100%;min-height:48px;font-size:15px}
+}
+
+/* Shorter portrait phones: drop the rival blurbs, then the logo, so the whole harbor fits without scrolling. */
+@media (max-aspect-ratio:1/1) and (max-height:800px){
+  .pf-rivals small{display:none}
+  .pf-rivals li{padding:4px 10px}
+  .pf-panel h2{margin:8px 0 5px}
+  .pf-stats strong{font-size:20px}.pf-stats div+div strong{font-size:16px}
+  .pf-stepper button:not(.pf-primary),.pf-stepper .pf-primary{min-height:44px}
+  .pf-game .pf-battle{min-height:48px}
+}
+@media (max-aspect-ratio:1/1) and (max-height:700px){
+  .pf-logo{display:none}
+  .pf-harbor{padding-top:8px}
+}
+
+/* Short landscape frames (phones held sideways): two-column harbor, compact HUD, 44px targets. */
+@media (min-aspect-ratio:1/1) and (max-height:480px) and (min-width:521px){
+  .pf-logo{display:none}
+  .pf-panel{inset:8px 8px 60px;width:auto;padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-content:start}
+  .pf-col{display:block;grid-column:1;grid-row:1 / span 4;min-width:0}
+  .pf-col+.pf-col{display:contents}
+  .pf-panel .pf-col+.pf-col>*{grid-column:2}
+  .pf-panel h2{font-size:14px;margin:0 0 6px}
+  .pf-stats span{font-size:12px}
+  .pf-powder h2{margin-top:8px}
+  .pf-stepper button:not(.pf-primary){width:44px;min-height:44px;font-size:18px;padding:0}
+  .pf-stepper output{flex:1}
+  .pf-stepper .pf-primary{flex:1 1 100%;min-width:0;min-height:44px}
+  .pf-feedback{font-size:12px!important}
+  .pf-rivals li{padding:4px 8px}
+  .pf-rivals span{font-size:12px}
+  .pf-rivals small{display:none}
+  .pf-game .pf-battle{min-height:46px}
+  .pf-battle span{font-size:12px}
+  .pf-hint{margin-top:6px}
+  .pf-row{margin-top:6px}.pf-row button{flex:1;min-height:44px}
+  .pf-record{font-size:12px}
+
+  .pf-plate{top:8px;width:min(230px,30%);padding:6px 10px;gap:3px}
+  .pf-plate strong{font-size:13px}.pf-plate span{font-size:12px}.pf-plate b{font-size:15px}.pf-bar{height:10px}
+  .pf-tag{font-size:11px}
+  .pf-center{top:8px;gap:4px}
+  .pf-wind{padding:3px 10px}.pf-wind span{font-size:12px}.pf-wind b{font-size:15px}
+  .pf-game .pf-center .pf-small{min-height:44px;padding:4px 18px;font-size:14px}
+  .pf-callout{top:112px;max-width:52%;white-space:normal;text-align:center;font-size:13px}
+  .pf-aim{bottom:62px;font-size:13px}
+  .pf-game .pf-fire{right:14px;bottom:14px;width:80px;height:80px}
+
+  /* Result: title across the top, the ledger on the left, outcome and buttons on the right. */
+  .pf-result{padding:8px 8px 60px}
+  .pf-card{width:min(720px,100%);padding:10px 16px;display:grid;grid-template-columns:1.2fr 1fr;column-gap:18px;align-items:start}
+  .pf-card h2,.pf-reason{grid-column:1 / -1}
+  .pf-card h2{font-size:32px}
+  .pf-reason{margin:4px 0 6px}
+  .pf-card table{grid-column:1;grid-row:3 / span 3}
+  .pf-card th{padding:3px 0}
+  .pf-hits{margin:0 0 4px}.pf-small-print{font-size:12px}
+  .pf-card .pf-row{margin-top:6px}.pf-card .pf-row button{flex:1 1 100%;min-height:44px}
+
+  /* Menus sit right of the SDK toolbar, so they can use the full height. */
+  .pf-game .rf-frame-scrim{padding:8px 8px 8px 360px}
+  .pf-game .rf-frame-menu-heading{padding:4px 8px 4px 14px}
+  .pf-game .rf-frame-menu-body{padding:8px 14px}
+  .pf-game .rf-frame-menu-body p{margin-bottom:8px}
+  .pf-check{margin:6px 0}.pf-game .pf-danger{margin:6px 0}
+}
+/* The shortest landscape phones: drop the load hint and tighten the harbor rows. */
+@media (min-aspect-ratio:1/1) and (max-height:360px) and (min-width:521px){
+  .pf-hint{display:none}
+  .pf-panel{padding:8px 12px}
+  .pf-stats div{padding:5px 10px}
+  .pf-powder p{margin-bottom:6px}
+  .pf-rivals{gap:5px}
+}

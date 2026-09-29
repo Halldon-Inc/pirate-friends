@@ -7,6 +7,8 @@ export const VIEW_W = 960, VIEW_H = 640;
 const SEA_Y = 468, HORIZON = 392, GRAVITY = 560;
 const PLAYER_RELOAD = 0.42, MAX_PARTICLES = 700;
 const ANGLE_MIN = -12, ANGLE_MAX = 78, POWER_MIN = 0.2;
+// Rows of the reference scene the camera keeps in view on short, wide frames; above and below is empty sky and sea.
+const FOCUS_TOP = 80, FOCUS_BOTTOM = 600;
 
 export type Zone = "magazine" | "waterline" | "cabin" | "sails" | "hull";
 export const ZONES: Readonly<Record<Zone, { label: string; damage: number; bonus: number; effect: string }>> = {
@@ -74,6 +76,8 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 const inRect = (p: Point, r: readonly number[]) => p.x >= r[0] && p.x <= r[2] && p.y >= r[1] && p.y <= r[3];
+const hash = (n: number) => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
+type View = { left: number; top: number; right: number; bottom: number; scale: number };
 
 // Ship-local geometry, facing right, origin on the waterline. Enemy ships are mirrored.
 const MAGAZINE = [4, -27, 30, -9] as const;
@@ -127,7 +131,13 @@ const RIVAL_COLORS: Record<string, string> = { R: "#e63946", W: "#f6f1e7", K: "#
 export class Scene {
   private ctx: CanvasRenderingContext2D;
   private bg: HTMLCanvasElement | null = null;
+  private bgRect = { x: -20, y: -20, w: VIEW_W + 40, h: VIEW_H + 40 };
   private dpr = 1;
+  private cssW = 0;
+  private cssH = 0;
+  /** Visible world rectangle. The simulation always runs in 960 × 640 world units; the camera fits it to any frame. */
+  private view: View = { left: 0, top: 0, right: VIEW_W, bottom: VIEW_H, scale: 1 };
+  private textScale = 1;
   private t = 0;
   private opts: SceneOptions;
   private friendSprites: HTMLCanvasElement[];
@@ -197,12 +207,22 @@ export class Scene {
       sinking: 0, phase: rand(0, 6), angle: isPlayer ? 38 : 40, recoil: 0, flash: 0, ammo: 0, reload: 0, isPlayer, pose: { cx: x, cy: SEA_Y, rot: 0 }, lastHit: 0, desperate: false };
   }
 
+  /** Match the backing store to the canvas's CSS size and fit the battle into it (portrait, landscape or reference). */
   resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (dpr !== this.dpr || this.canvas.width !== VIEW_W * dpr) {
-      this.dpr = dpr; this.canvas.width = VIEW_W * dpr; this.canvas.height = VIEW_H * dpr; this.bg = null;
-    }
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = this.canvas.clientWidth || VIEW_W, h = this.canvas.clientHeight || VIEW_H;
+    if (dpr === this.dpr && w === this.cssW && h === this.cssH) return;
+    this.dpr = dpr; this.cssW = w; this.cssH = h;
+    // Width always shows the whole battle; short frames crop empty sky and sea, tall frames add more of both.
+    const scale = Math.min(w / VIEW_W, h / (FOCUS_BOTTOM - FOCUS_TOP)), spanW = w / scale, spanH = h / scale;
+    const left = (VIEW_W - spanW) / 2;
+    const top = spanH >= VIEW_H ? (VIEW_H - spanH) / 2 : clamp((FOCUS_TOP + FOCUS_BOTTOM - spanH) / 2, 0, VIEW_H - spanH);
+    this.view = { left, top, right: left + spanW, bottom: top + spanH, scale };
+    // Keep floating callouts readable when a phone draws the world small.
+    this.textScale = clamp(0.68 / scale, 1, 1.8);
+    this.canvas.width = Math.round(w * dpr); this.canvas.height = Math.round(h * dpr); this.bg = null;
   }
+  /** Canvas CSS pixels to world units, for pointer aiming. */
+  screenToWorld(x: number, y: number): Point { return { x: this.view.left + x / this.view.scale, y: this.view.top + y / this.view.scale }; }
 
   // ─── Battle lifecycle ──────────────────────────────────────────────
   startBattle(rival: Rival, stake: number) {
@@ -332,7 +352,7 @@ export class Scene {
   // ─── Simulation ────────────────────────────────────────────────────
   update(dt: number) {
     this.t += dt;
-    for (const c of this.clouds) { c.x += c.v * dt; if (c.x > VIEW_W + 160) c.x = -160; }
+    for (const c of this.clouds) { c.x += c.v * dt; if (c.x > Math.max(VIEW_W, this.view.right) + 160) c.x = Math.min(0, this.view.left) - 160; }
     this.updatePose(this.player); if (this.enemy) this.updatePose(this.enemy);
     this.stepParticles(dt);
     this.stepGulls(dt);
@@ -633,6 +653,7 @@ export class Scene {
     this.spawn({ x, y, vx: 0, vy: 0, life: 0.5, size: 36 * power, color: "#e8feff", kind: "ring", grav: 0 });
   }
   private floatText(text: string, x: number, y: number, color: string, size: number) {
+    size *= this.textScale;
     let top = clamp(y, 110, VIEW_H - 80);
     // Stack fresh callouts instead of printing them over each other.
     for (let guard = 0; guard < 6 && this.texts.some(t => t.life > 0.7 && Math.abs(t.y - top) < size * 0.95 && Math.abs(t.x - x) < 220); guard++) top -= size + 4;
@@ -657,12 +678,12 @@ export class Scene {
   // ─── Rendering ─────────────────────────────────────────────────────
   render() {
     this.resize();
-    const ctx = this.ctx;
-    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    const ctx = this.ctx, v = this.view, px = v.scale * this.dpr;
+    ctx.setTransform(px, 0, 0, px, -v.left * px, -v.top * px);
     if (!this.bg) this.bg = this.paintBackground();
     const sx = this.shake ? rand(-this.shake, this.shake) : 0, sy = this.shake ? rand(-this.shake, this.shake) : 0;
     ctx.save(); ctx.translate(sx, sy);
-    ctx.drawImage(this.bg, -20, -20, VIEW_W + 40, VIEW_H + 40);
+    ctx.drawImage(this.bg, this.bgRect.x, this.bgRect.y, this.bgRect.w, this.bgRect.h);
     this.paintClouds(ctx);
     this.paintSea(ctx);
     this.paintWaves(ctx, HORIZON + 30, 3, "rgba(20,120,170,0.55)", 0.012, 0.8);
@@ -678,7 +699,7 @@ export class Scene {
     this.paintParticles(ctx);
     this.paintTexts(ctx);
     ctx.restore();
-    if (this.flash > 0) { ctx.fillStyle = `rgba(255,240,200,${this.flash * 0.45})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
+    if (this.flash > 0) { ctx.fillStyle = `rgba(255,240,200,${this.flash * 0.45})`; ctx.fillRect(v.left, v.top, v.right - v.left, v.bottom - v.top); }
     if (this.mode === "battle" && this.intro > 0) this.paintIntro(ctx);
     this.canvas.dataset.mode = this.mode;
     this.canvas.dataset.ammo = String(this.player.ammo);
@@ -688,13 +709,22 @@ export class Scene {
   }
 
   private paintBackground() {
-    const c = document.createElement("canvas"); c.width = (VIEW_W + 40) * this.dpr; c.height = (VIEW_H + 40) * this.dpr;
-    const ctx = c.getContext("2d")!; ctx.scale(this.dpr, this.dpr); ctx.translate(20, 20);
+    const v = this.view, x0 = Math.min(-20, v.left - 20), y0 = Math.min(-20, v.top - 20);
+    const r = this.bgRect = { x: x0, y: y0, w: Math.max(VIEW_W + 20, v.right + 20) - x0, h: Math.max(VIEW_H + 20, v.bottom + 20) - y0 };
+    const px = v.scale * this.dpr, c = document.createElement("canvas"); c.width = Math.ceil(r.w * px); c.height = Math.ceil(r.h * px);
+    const ctx = c.getContext("2d")!; ctx.scale(px, px); ctx.translate(-r.x, -r.y);
     const sky = ctx.createLinearGradient(0, -20, 0, HORIZON);
     sky.addColorStop(0, "#1d0b4a"); sky.addColorStop(0.35, "#6a1b9a"); sky.addColorStop(0.62, "#e8457c"); sky.addColorStop(0.85, "#ff9a3c"); sky.addColorStop(1, "#ffd56b");
-    ctx.fillStyle = sky; ctx.fillRect(-20, -20, VIEW_W + 40, HORIZON + 20);
+    ctx.fillStyle = sky; ctx.fillRect(r.x, r.y, r.w, HORIZON - r.y);
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     for (let i = 0; i < 70; i++) { const x = (i * 137) % VIEW_W, y = (i * 53) % 150; ctx.globalAlpha = 0.25 + (i % 5) * 0.12; ctx.fillRect(x, y, i % 7 === 0 ? 2 : 1, i % 7 === 0 ? 2 : 1); }
+    // More stars wherever a tall or wide frame shows night sky beyond the reference scene.
+    const starBottom = 170, extra = Math.round(r.w * (starBottom - r.y) / 1800);
+    for (let i = 0; i < extra; i++) {
+      const x = r.x + hash(i + 1) * r.w, y = r.y + hash(i + 7919) * (starBottom - r.y);
+      if (x > -20 && x < VIEW_W + 20 && y > -20) continue;
+      ctx.globalAlpha = 0.25 + (i % 5) * 0.12; ctx.fillRect(x, y, i % 7 === 0 ? 2.5 : 1.5, i % 7 === 0 ? 2.5 : 1.5);
+    }
     ctx.globalAlpha = 1;
     const sunX = 480, sunY = HORIZON - 44;
     const glow = ctx.createRadialGradient(sunX, sunY, 20, sunX, sunY, 260);
@@ -725,9 +755,9 @@ export class Scene {
     }
   }
   private paintSea(ctx: CanvasRenderingContext2D) {
-    const sea = ctx.createLinearGradient(0, HORIZON, 0, VIEW_H);
+    const v = this.view, sea = ctx.createLinearGradient(0, HORIZON, 0, VIEW_H);
     sea.addColorStop(0, "#ff9f6e"); sea.addColorStop(0.08, "#2bb3c0"); sea.addColorStop(0.45, "#0e7fa6"); sea.addColorStop(1, "#083b6b");
-    ctx.fillStyle = sea; ctx.fillRect(-20, HORIZON, VIEW_W + 40, VIEW_H - HORIZON + 20);
+    ctx.fillStyle = sea; ctx.fillRect(v.left - 20, HORIZON, v.right - v.left + 40, Math.max(VIEW_H, v.bottom) - HORIZON + 20);
     ctx.fillStyle = "rgba(255,236,170,0.75)";
     for (let i = 0; i < 16; i++) {
       const y = HORIZON + 6 + i * 11, w = 110 - i * 5 + Math.sin(this.t * 3 + i) * 14 * (this.reducedMotion ? 0 : 1);
@@ -736,28 +766,31 @@ export class Scene {
     ctx.globalAlpha = 1;
   }
   private paintWaves(ctx: CanvasRenderingContext2D, y: number, amp: number, color: string, freq: number, speed: number) {
-    const m = this.reducedMotion ? 0.3 : 1;
-    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(-20, VIEW_H + 20);
-    for (let x = -20; x <= VIEW_W + 20; x += 12) ctx.lineTo(x, y + Math.sin(x * freq + this.t * speed) * amp * m + Math.sin(x * freq * 2.3 - this.t * speed * 1.3) * amp * 0.4 * m);
-    ctx.lineTo(VIEW_W + 20, VIEW_H + 20); ctx.fill();
+    const m = this.reducedMotion ? 0.3 : 1, v = this.view, left = v.left - 20, right = v.right + 20, bottom = Math.max(VIEW_H, v.bottom) + 20;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(left, bottom);
+    for (let x = left; x <= right; x += 12) ctx.lineTo(x, y + Math.sin(x * freq + this.t * speed) * amp * m + Math.sin(x * freq * 2.3 - this.t * speed * 1.3) * amp * 0.4 * m);
+    ctx.lineTo(right, bottom); ctx.fill();
   }
   private paintFrontWaves(ctx: CanvasRenderingContext2D) {
-    const m = this.reducedMotion ? 0.3 : 1;
+    const m = this.reducedMotion ? 0.3 : 1, v = this.view, left = v.left - 20, right = v.right + 20, bottom = Math.max(VIEW_H, v.bottom) + 20;
     const g = ctx.createLinearGradient(0, SEA_Y, 0, VIEW_H); g.addColorStop(0, "rgba(18,190,210,0.92)"); g.addColorStop(1, "rgba(6,60,110,0.98)");
-    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-20, VIEW_H + 20);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(left, bottom);
     const pts: Point[] = [];
-    for (let x = -20; x <= VIEW_W + 20; x += 10) { const y = this.surface(x) + 6 + Math.sin(x * 0.05 - this.t * 1.6) * 2 * m; pts.push({ x, y }); ctx.lineTo(x, y); }
-    ctx.lineTo(VIEW_W + 20, VIEW_H + 20); ctx.fill();
+    for (let x = left; x <= right; x += 10) { const y = this.surface(x) + 6 + Math.sin(x * 0.05 - this.t * 1.6) * 2 * m; pts.push({ x, y }); ctx.lineTo(x, y); }
+    ctx.lineTo(right, bottom); ctx.fill();
     ctx.strokeStyle = "rgba(230,255,255,0.85)"; ctx.lineWidth = 3; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
     ctx.fillStyle = "rgba(255,255,255,0.35)";
-    for (let i = 0; i < 26; i++) { const x = (i * 97 + this.t * 20 * m) % (VIEW_W + 40) - 20, y = 520 + (i * 37) % 110; ctx.fillRect(x, y, 18 + (i % 4) * 6, 2); }
+    // Foam streaks cover whatever stretch of sea the frame shows (the reference scene has 26).
+    const span = right - left, depth = Math.max(110, bottom - 540), foam = Math.round(26 * span / (VIEW_W + 40) * depth / 110);
+    for (let i = 0; i < foam; i++) { const x = (i * 97 + this.t * 20 * m) % span + left, y = 520 + (i * 37) % depth; ctx.fillRect(x, y, 18 + (i % 4) * 6, 2); }
   }
 
   private paintShip(ctx: CanvasRenderingContext2D, ship: Ship) {
     const { cx, cy, rot } = ship.pose, L = ship.look;
     ctx.save();
     // Anything below the sea surface disappears, which also sinks ships convincingly.
-    ctx.beginPath(); ctx.rect(-20, -40, VIEW_W + 40, SEA_Y + 16 + 40); ctx.clip();
+    const v = this.view;
+    ctx.beginPath(); ctx.rect(v.left - 20, v.top - 40, v.right - v.left + 40, SEA_Y + 16 - v.top + 40); ctx.clip();
     ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(ship.facing * ship.scale, ship.scale);
     // Masts and sails behind the hull.
     const broken = ship.sailTears >= 4;
@@ -876,7 +909,7 @@ export class Scene {
     RIVAL_CAPTAIN.forEach((row, r) => [...row].forEach((ch, c) => { const color = RIVAL_COLORS[ch]; if (color) { ctx.fillStyle = color; ctx.fillRect(x + c * px, y + r * px + (r < 12 ? bob : 0), px, px); } }));
   }
   private paintShot(ctx: CanvasRenderingContext2D, s: Shot) {
-    const y = Math.max(s.y, 14);
+    const top = this.view.top + 14, y = Math.max(s.y, top);
     if (s.owner === "player") {
       ctx.save(); ctx.translate(s.x, y); if (!this.reducedMotion) ctx.rotate(s.rot);
       ctx.shadowColor = `hsl(${(s.hue + s.age * 360) % 360},100%,60%)`; ctx.shadowBlur = 16;
@@ -886,7 +919,7 @@ export class Scene {
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, y, 8, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = Math.random() < 0.5 ? "#ffd23f" : "#ff7b00"; ctx.fillRect(s.x + 4, y - 11, 3, 3);
     }
-    if (s.y < 14) { ctx.fillStyle = s.owner === "player" ? "#ccff00" : "#ff3d6e"; ctx.beginPath(); ctx.moveTo(s.x, 4); ctx.lineTo(s.x - 7, 16); ctx.lineTo(s.x + 7, 16); ctx.fill(); }
+    if (s.y < top) { ctx.fillStyle = s.owner === "player" ? "#ccff00" : "#ff3d6e"; ctx.beginPath(); ctx.moveTo(s.x, top - 10); ctx.lineTo(s.x - 7, top + 2); ctx.lineTo(s.x + 7, top + 2); ctx.fill(); }
   }
   private paintAim(ctx: CanvasRenderingContext2D) {
     const p = this.player, speed = 360 + this.aim.power * 560, a = this.aim.angle * Math.PI / 180, m = this.muzzle(p, this.aim.angle);
@@ -945,8 +978,10 @@ export class Scene {
     ctx.restore();
   }
   private paintGull(ctx: CanvasRenderingContext2D, g: Gull) {
-    const flap = this.reducedMotion ? 0.4 : Math.sin(g.flap) * 0.8, dir = Math.sign(g.vx);
+    const flap = this.reducedMotion ? 0.4 : Math.sin(g.flap) * 0.8, dir = Math.sign(g.vx), v = this.view;
     ctx.save(); ctx.translate(g.x, g.y);
+    // Wide frames show past the spawn edges, so gulls fade in and out there instead of popping.
+    if (v.left < -1 || v.right > VIEW_W + 1) ctx.globalAlpha = clamp(Math.min(g.x + 30, VIEW_W + 30 - g.x) / 60, 0, 1);
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.beginPath();
     ctx.moveTo(-16, -8 * flap); ctx.quadraticCurveTo(-8, -10 * flap - 4, 0, 0); ctx.quadraticCurveTo(8, -10 * flap - 4, 16, -8 * flap); ctx.stroke();
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(0, 1, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
@@ -978,7 +1013,7 @@ export class Scene {
       const f = Math.min(1, t.life / 0.3), pop = 1 + Math.max(0, t.life - 1.1) * 2;
       ctx.globalAlpha = f; ctx.font = `900 ${Math.round(t.size * pop)}px "Trebuchet MS", system-ui, sans-serif`;
       const half = ctx.measureText(t.text).width / 2 + 8, x = clamp(t.x, half, VIEW_W - half);
-      ctx.strokeStyle = "#1a0a2e"; ctx.lineWidth = 6; ctx.strokeText(t.text, x, t.y); ctx.fillStyle = t.color; ctx.fillText(t.text, x, t.y);
+      ctx.strokeStyle = "#1a0a2e"; ctx.lineWidth = 6 * this.textScale; ctx.strokeText(t.text, x, t.y); ctx.fillStyle = t.color; ctx.fillText(t.text, x, t.y);
     }
     ctx.globalAlpha = 1;
   }

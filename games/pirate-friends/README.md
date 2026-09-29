@@ -27,7 +27,8 @@ Build the static preview with `npx friendsdk build games/pirate-friends` (output
 2. **Choose a rival** and set sail. You and the rival each load the same stake of Generations.
 3. **Fire.** Mouse: direction from your cannon sets the angle, distance sets the power; click to fire, hold for rapid
    fire. Keyboard: A/D angle, W/S power, Space fire (hold to repeat), M mute, Esc pause. Touch: drag to aim, release
-   to fire, or hold the FIRE button. A dotted arc previews the start of the shot; wind bends the rest.
+   to fire, or hold the FIRE button; the Pause button opens settings and the forfeit option. A dotted arc previews
+   the start of the shot; wind bends the rest.
 4. **Win** by sinking the rival or outlasting their ammunition. Run out of Generations first and you strike your
    colours.
 
@@ -130,6 +131,22 @@ Settings has sound on/off and reduce motion (no screen shake, calmer sea, fewer 
 honoured by default). Keyboard play works end to end, gameplay pauses whenever the runtime menu or a game menu is
 open, and loading failures show a retry button.
 
+## Phones and layout
+
+Desktop uses the 960 × 640 reference frame. On portrait phones and tablets, and on landscape screens up to 500px
+tall, `host.css` (trusted runtime layout, loaded by the CLI) lets the SDK frame fill the screen, with a readable
+identity toolbar and 44px trusted controls. The battle always simulates the same 960 × 640 world, so aim, hitboxes
+and rival difficulty do not change; a camera fits it to the frame's shape:
+
+- **Portrait:** the whole battle spans the width, with extra night sky above (high lobs stay visible) and sea
+  below. The ship plates, wind, pot, Pause and callouts sit above the battle; the aim readout and a large FIRE button
+  sit at the bottom, clear of the SDK toolbar. The harbor stacks into one column; on shorter phones the rival blurbs and
+  then the logo drop out so it fits, and only iPhone SE sized screens scroll the rival list.
+- **Landscape phones:** empty sky and sea are cropped so the ships draw larger, with a compact HUD, a two-column
+  harbor and result card, and menus beside the SDK toolbar.
+
+All game text is 12px or larger on phones and every control is at least 44px tall.
+
 ## Assets
 
 All artwork is drawn in code for this game (ships, sea, sky, Kraken, the rival skull captain and the tricorn hat).
@@ -140,8 +157,11 @@ hat added on top. Sound is synthesized with Web Audio. No third-party assets.
 
 - `npx friendsdk check games/pirate-friends`: valid.
 - `npx tsc -p games/pirate-friends/tsconfig.json`: clean.
-- `node games/pirate-friends/test.mjs ./artifacts 960` (also 600 and 390): SDK mock-wallet browser run that loads
-  kegs with one confirmation, starts a battle, fires 6 shots with no further prompts, forfeits and checks the result.
+- `node games/pirate-friends/test.mjs ./artifacts 960` (also 600, 390, `390x664`, `360x740` and `844x390 touch`):
+  SDK mock-wallet browser run that loads kegs with one confirmation, starts a battle, fires 6 shots with no further
+  prompts, forfeits and checks the result. Frames under 500px wide or given `touch` also fire by drag and release and
+  by the FIRE button, and pause with the Pause button. Each screen reports its smallest text and tap target and fails
+  if a control leaves the frame or sits under the SDK toolbar.
 - `node games/pirate-friends/bot.mjs <parked|adaptive> <bess|rook|admiral> [width] [ms]`: difficulty bots, results above.
 
 The mock tests do not verify real RPC reads or ownership. The real ownership gate needs a wallet holding a hardwired

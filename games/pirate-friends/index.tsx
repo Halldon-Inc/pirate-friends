@@ -126,9 +126,10 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
 
   // ─── Input ─────────────────────────────────────────────────────────
   const blocked = paused || menu !== null || screen !== "battle";
+  // The scene's camera fits the battle to the frame's shape, so it maps screen points to the world.
   const toPoint = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    return { x: (event.clientX - rect.left) * VIEW_W / rect.width, y: (event.clientY - rect.top) * VIEW_H / rect.height };
+    const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
+    return scene.current?.screenToWorld(x, y) ?? { x: x * VIEW_W / rect.width, y: y * VIEW_H / rect.height };
   };
   const touchAim = useRef(false);
 
@@ -177,6 +178,7 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
       <div className="pf-logo" aria-hidden="true"><span>PIRATE</span><span>FRIENDS</span><small>Fire your Generations. Sink their ship. Keep their hold.</small></div>
       <div className="pf-panel">
         <h1 className="pf-sr">Pirate Friends harbor</h1>
+        <div className="pf-col">
         <div className="pf-stats">
           <div><strong data-testid="hold">{hold}</strong><span>Generations in hold</span></div>
           <div><strong>{rf(snapshot.rfBalance)}</strong><span>{mode} balance</span></div>
@@ -193,6 +195,8 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
           </div>
           <p className="pf-feedback" role={error ? "alert" : "status"}>{error || message || (canAfford ? `${mode} RF. Every keg stays backed by a 1 RF reserve.` : `Not enough ${mode.toLowerCase()} RF for ${kegs} kegs.`)}</p>
         </div>
+        </div>
+        <div className="pf-col">
         <h2>Choose your rival</h2>
         <ul className="pf-rivals">
           {RIVALS.map(item => <li key={item.id} style={{ ["--rival" as string]: item.look.flag === "#111" ? "#b388ff" : item.look.flag }}>
@@ -206,6 +210,7 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
           <button type="button" onClick={() => setMenu("help")}>How to play</button>
           <button type="button" onClick={() => setMenu("settings")}>Settings</button>
           {(record.wins + record.losses) > 0 && <span className="pf-record">{record.wins}W {record.losses}L · {record.burned} burned</span>}
+        </div>
         </div>
       </div>
     </div>}

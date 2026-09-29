@@ -1,0 +1,10 @@
+/* Trusted runtime layout for phones: the SDK frame fills the screen instead of a small 3:2 box, so the game can
+   lay itself out in portrait or wide landscape. Desktop keeps the 960 x 640 reference frame. */
+@media (orientation:portrait) and (max-width:820px),(orientation:landscape) and (max-height:500px){
+  :root{--rf-game-max-width:none}
+  #root .rf-game-frame{height:100vh;height:100dvh;aspect-ratio:auto;border:0}
+  /* Readable identity toolbar and comfortable targets for Friend, wallet and confirmation controls. */
+  #root .rf-frame-toolbar,#root .rf-frame-mode{font-size:12px}
+  #root .rf-game-frame button{min-height:44px}
+  #root .rf-frame-menu-heading button{min-width:44px}
+}
