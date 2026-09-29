@@ -15,14 +15,14 @@ await testGame("./games/pirate-friends", {
     await page.getByRole("button", { name: "Confirm preview", exact: true }).click();
     await game.getByText("30 Generations loaded into your hold.").waitFor();
     assert.equal(await game.getByTestId("hold").textContent(), "30");
-    await game.getByRole("button", { name: "Battle Barnacle Bess, stake 20 Generations" }).click();
+    await game.getByRole("button", { name: "Battle Barnacle Bess, stake 30 Generations" }).click();
     assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0, "Firing needs no confirmation");
     await page.waitForTimeout(1700);
     for (let i = 0; i < 6; i++) { await canvas.press("Space"); await page.waitForTimeout(450); }
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${out}/pf-${width}-battle.png` });
     const ammo = Number(await canvas.getAttribute("data-ammo"));
-    assert.ok(ammo <= 15 && ammo >= 13, `expected about 6 shots fired, ammo ${ammo}`);
+    assert.ok(ammo <= 25 && ammo >= 23, `expected about 6 shots fired, ammo ${ammo}`);
     await canvas.press("Escape");
     await game.getByRole("button", { name: /Strike your colours/ }).click();
     await game.getByRole("heading", { name: "Defeat" }).waitFor({ timeout: 10_000 });

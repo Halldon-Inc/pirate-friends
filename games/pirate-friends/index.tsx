@@ -226,7 +226,7 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
       <div className="pf-plate pf-them" style={{ ["--rival" as string]: rival.look.flag === "#111" ? "#b388ff" : rival.look.flag }}>
         <strong>{rival.name}</strong>
         <div className="pf-bar"><i style={{ width: bar(hud.enemyHp, hud.enemyMax) }} /></div>
-        <span>{hud.enemyAmmo} Generations left</span>
+        <span>{hud.repairing && <em className="pf-tag pf-repair">patching hull</em>}{hud.desperate && <em className="pf-tag pf-desperate">desperate</em>}{hud.enemyAmmo} Generations left</span>
       </div>
       {callout && <p className="pf-callout">{callout}</p>}
       <p className="pf-aim" aria-hidden="true">Angle {hud.angle}° · Power {hud.power}%<span className="pf-desktop"> · Mouse aims, click or hold to fire · A/D angle · W/S power · Space fire</span><span className="pf-touch"> · Drag to aim, release to fire</span></p>
@@ -271,6 +271,7 @@ export default function PirateFriends({ friendId, client, paused }: GameComponen
         <table><thead><tr><th>Target</th><th>Damage</th><th>Effect</th></tr></thead><tbody>
           {ZONE_ORDER.map(zone => <tr key={zone}><td>{ZONES[zone].label.toLowerCase()}</td><td>{ZONES[zone].damage}</td><td>{ZONES[zone].effect}{ZONES[zone].bonus ? ` (+${ZONES[zone].bonus} Generations)` : ""}</td></tr>)}
         </tbody></table>
+        <p><b>The catch:</b> every rapid shot heats your cannon and throws it wilder; max the heat and it locks up to cool. Stop hitting the rival for 1.4 seconds and their crew patches the hull and bails out leaks. Below 35% hull they get desperate and fire much faster. The wind shifts every few seconds. Consecutive hits stack up to +50% damage, and every fifth hit in a row pays +2.</p>
         <p><b>On the way:</b> gulls bounce your shot higher (+1), RF barrels act as trampolines (+2), treasure chests pay +5, flat fast shots skip off the water, the Kraken eats anything it touches, and you can shoot their cannonballs out of the sky (+1). Salvage is paid only if you win.</p>
         <p><b>Controls:</b> mouse aims (direction sets angle, distance sets power), click or hold to fire. Keyboard: A/D angle, W/S power, Space fire, M mute, Esc pause. Touch: drag to aim, release to fire, or hold FIRE. Wind bends every shot.</p>
       </div> : <>

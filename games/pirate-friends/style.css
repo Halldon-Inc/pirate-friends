@@ -112,3 +112,8 @@
   .pf-aim{bottom:44px;font-size:9px;left:38%}.pf-game .pf-fire{width:50px;height:50px;right:50px;bottom:6px;font-size:11px;border-width:3px}
   .pf-card h2{font-size:30px}.pf-card{padding:10px}.pf-result{padding:6px 6px 44px}
 }
+.pf-tag{font-style:normal;font-weight:900;font-size:10px;text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:6px;color:#1a0a2e}
+.pf-repair{background:#39ff88;animation:pf-blink 1s steps(2) infinite}
+.pf-desperate{background:#ff3d6e;color:#fff}
+@keyframes pf-blink{50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){.pf-repair{animation:none}}

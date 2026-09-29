@@ -10,36 +10,39 @@ const ANGLE_MIN = -12, ANGLE_MAX = 78, POWER_MIN = 0.2;
 
 export type Zone = "magazine" | "waterline" | "cabin" | "sails" | "hull";
 export const ZONES: Readonly<Record<Zone, { label: string; damage: number; bonus: number; effect: string }>> = {
-  magazine: { label: "POWDER MAGAZINE", damage: 40, bonus: 5, effect: "One huge blast per ship, sets the deck on fire" },
-  waterline: { label: "WATERLINE", damage: 15, bonus: 0, effect: "Springs a leak that keeps draining hull" },
-  cabin: { label: "CAPTAIN'S CABIN", damage: 13, bonus: 2, effect: "Plunders loose Generations from the cabin" },
-  sails: { label: "SAILS", damage: 5, bonus: 0, effect: "Shot rips through; every tear slows their reload" },
-  hull: { label: "HULL", damage: 9, bonus: 0, effect: "Solid hit" },
+  magazine: { label: "POWDER MAGAZINE", damage: 34, bonus: 5, effect: "One huge blast per ship, sets the deck on fire, stops repairs while it burns" },
+  waterline: { label: "WATERLINE", damage: 11, bonus: 0, effect: "Springs a leak that keeps draining hull until the crew bails it out" },
+  cabin: { label: "CAPTAIN'S CABIN", damage: 8, bonus: 2, effect: "Plunders loose Generations from the cabin" },
+  sails: { label: "SAILS", damage: 3, bonus: 0, effect: "Shot rips through; every tear slows their reload" },
+  hull: { label: "HULL", damage: 6, bonus: 0, effect: "Solid hit" },
 };
 
 export type ShipLook = Readonly<{ hull: string; hullDark: string; stripe: string; trim: string; sail: string; sailTrim: string; flag: string }>;
 export type Rival = Readonly<{
   id: string; name: string; ship: string; difficulty: string; blurb: string; stake: number; hp: number;
-  reload: number; spread: number; windSkill: number; scale: number; drift: number; look: ShipLook;
+  reload: number; spread: number; windSkill: number; scale: number; drift: number; regen: number; taunts: readonly string[]; look: ShipLook;
 }>;
 
 export const PLAYER_LOOK: ShipLook = { hull: "#c26b2e", hullDark: "#6d3313", stripe: "#12d6c0", trim: "#ffd23f", sail: "#fff6df", sailTrim: "#ccff00", flag: "#ccff00" };
 export const RIVALS: readonly Rival[] = [
-  { id: "bess", name: "Barnacle Bess", ship: "The Soggy Biscuit", difficulty: "Easy", blurb: "Fires slow and wide. A good place to learn the arc.",
-    stake: 20, hp: 85, reload: 2.2, spread: 0.14, windSkill: 0.2, scale: 0.9, drift: 14,
+  { id: "bess", name: "Barnacle Bess", ship: "The Soggy Biscuit", difficulty: "Easy", blurb: "Sloppy aim, fast hands. Stop hitting her and she patches the hull.",
+    stake: 30, hp: 137, reload: 1.5, spread: 0.085, windSkill: 0.35, scale: 0.9, drift: 62, regen: 2.4,
+    taunts: ["Bess: Ye couldn't hit the sea from a rowboat!", "Bess: Is that a cannon or a pea shooter?", "Bess: My gran shoots straighter, and she's a barnacle!", "Bess: Keep feedin' the fishes, sweetie!"],
     look: { hull: "#e0913f", hullDark: "#8a4a17", stripe: "#3ec8ff", trim: "#fff1a8", sail: "#fff0f6", sailTrim: "#ff5fae", flag: "#ff5fae" } },
-  { id: "rook", name: "Redbeard Rook", ship: "The Crimson Gull", difficulty: "Medium", blurb: "Reads the wind half the time. Tear his sails early.",
-    stake: 30, hp: 110, reload: 1.7, spread: 0.095, windSkill: 0.55, scale: 1, drift: 38,
+  { id: "rook", name: "Redbeard Rook", ship: "The Crimson Gull", difficulty: "Medium", blurb: "Reads the wind, tacks hard, repairs fast. Tear his sails early.",
+    stake: 40, hp: 185, reload: 1.3, spread: 0.068, windSkill: 0.65, scale: 1, drift: 76, regen: 3.6,
+    taunts: ["Rook: Ha! The wind's on MY side, landlubber!", "Rook: Missed by a mile, and a mile's a long way!", "Rook: I've seen better aim from a drunk parrot!", "Rook: Those Generations were lovely. Send more!"],
     look: { hull: "#9b3b2c", hullDark: "#4e1810", stripe: "#ffb627", trim: "#ffe08a", sail: "#ffe3c2", sailTrim: "#e63946", flag: "#e63946" } },
-  { id: "admiral", name: "The Dread Admiral", ship: "Leviathan's Grin", difficulty: "Hard", blurb: "A floating fortress. Find the magazine or bring a lot of Generations.",
-    stake: 50, hp: 150, reload: 1.25, spread: 0.06, windSkill: 0.85, scale: 1.12, drift: 55,
+  { id: "admiral", name: "The Dread Admiral", ship: "Leviathan's Grin", difficulty: "Hard", blurb: "A floating fortress with a crew of carpenters. Find the magazine or go home broke.",
+    stake: 60, hp: 210, reload: 1.3, spread: 0.062, windSkill: 0.9, scale: 1.12, drift: 86, regen: 4.8,
+    taunts: ["Admiral: Pathetic.", "Admiral: Your Generations make fine ballast.", "Admiral: I've sunk better Friends before breakfast.", "Admiral: Do try to aim, captain."],
     look: { hull: "#34324a", hullDark: "#14131f", stripe: "#b388ff", trim: "#ffd23f", sail: "#2a2340", sailTrim: "#ff3d6e", flag: "#111" } },
 ];
 
 export type SoundName = "fire" | "enemyFire" | "hit" | "boom" | "splash" | "skip" | "bonus" | "gull" | "kraken" | "win" | "lose" | "tear";
 export type Hud = Readonly<{
   playerHp: number; playerMax: number; enemyHp: number; enemyMax: number; ammo: number; enemyAmmo: number;
-  wind: number; angle: number; power: number; streak: number; bonus: number; status: string;
+  wind: number; angle: number; power: number; streak: number; bonus: number; status: string; repairing: boolean; desperate: boolean; heat: number; overheated: boolean;
 }>;
 export type BattleResult = Readonly<{
   won: boolean; reason: "sunk" | "surrender" | "destroyed" | "dry"; stake: number; fired: number; unfired: number;
@@ -58,9 +61,9 @@ type Ship = {
   look: ShipLook; x: number; facing: 1 | -1; scale: number; hp: number; maxHp: number; leak: number; fire: number;
   sailTears: number; magazineBlown: boolean; holes: { x: number; y: number; r: number }[]; flames: Point[];
   sinking: number; phase: number; angle: number; recoil: number; flash: number; ammo: number; reload: number;
-  isPlayer: boolean; pose: { cx: number; cy: number; rot: number };
+  isPlayer: boolean; pose: { cx: number; cy: number; rot: number }; lastHit: number; desperate: boolean;
 };
-type Shot = { x: number; y: number; vx: number; vy: number; owner: "player" | "enemy"; rot: number; spin: number; skips: number; tore: boolean; alive: boolean; age: number; hue: number };
+type Shot = { x: number; y: number; vx: number; vy: number; owner: "player" | "enemy"; rot: number; spin: number; skips: number; tore: boolean; alive: boolean; age: number; hue: number; close: number };
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; color: string; kind: "spark" | "smoke" | "debris" | "drop" | "ring" | "feather" | "bubble" | "flash"; grav: number; rot: number };
 type Text = { text: string; x: number; y: number; life: number; color: string; size: number };
 type Gull = { x: number; y: number; vx: number; flap: number; alive: boolean };
@@ -73,9 +76,9 @@ const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v)
 const inRect = (p: Point, r: readonly number[]) => p.x >= r[0] && p.x <= r[2] && p.y >= r[1] && p.y <= r[3];
 
 // Ship-local geometry, facing right, origin on the waterline. Enemy ships are mirrored.
-const MAGAZINE = [0, -30, 34, -6] as const;
+const MAGAZINE = [4, -27, 30, -9] as const;
 const WATERLINE = [[-98, -14, -64, 4], [34, -14, 68, 4]] as const;
-const CABIN = [-130, -84, -72, -50] as const;
+const CABIN = [-126, -80, -84, -56] as const;
 const SAILS = [[-82, -238, 40, -92], [22, -198, 102, -92]] as const;
 const PIVOT = { x: 86, y: -58 }, BARREL = 40;
 function inHull(p: Point) {
@@ -146,6 +149,17 @@ export class Scene {
   private timers = { gull: 2, floater: 3, chest: 18, kraken: 10 };
   private wind = 0;
   private windBase = 0;
+  private windTarget = 0;
+  private gustTimer = 8;
+  private missRun = 0;
+  private heat = 0;
+  private lastShot = -9;
+  private reloadMax = PLAYER_RELOAD;
+  private overheated = false;
+  private lastTaunt = -99;
+  private repairNoted = false;
+  private repairText = 0;
+  private repairing = false;
   private shake = 0;
   private flash = 0;
   private aim = { angle: 38, power: 0.72 };
@@ -180,7 +194,7 @@ export class Scene {
 
   private makeShip(look: ShipLook, x: number, facing: 1 | -1, scale: number, hp: number, isPlayer: boolean): Ship {
     return { look, x, facing, scale, hp, maxHp: hp, leak: 0, fire: 0, sailTears: 0, magazineBlown: false, holes: [], flames: [],
-      sinking: 0, phase: rand(0, 6), angle: isPlayer ? 38 : 40, recoil: 0, flash: 0, ammo: 0, reload: 0, isPlayer, pose: { cx: x, cy: SEA_Y, rot: 0 } };
+      sinking: 0, phase: rand(0, 6), angle: isPlayer ? 38 : 40, recoil: 0, flash: 0, ammo: 0, reload: 0, isPlayer, pose: { cx: x, cy: SEA_Y, rot: 0 }, lastHit: 0, desperate: false };
   }
 
   resize() {
@@ -199,7 +213,8 @@ export class Scene {
     this.enemy.ammo = stake; this.enemy.reload = 2.2;
     this.shots = []; this.particles = []; this.texts = []; this.gulls = []; this.floaters = []; this.kraken = null;
     this.timers = { gull: 2.5, floater: 1.5, chest: rand(14, 22), kraken: rand(9, 13) };
-    this.windBase = Math.round(rand(-45, 45)); this.wind = this.windBase;
+    this.windBase = this.windTarget = Math.round(rand(-45, 45)); this.wind = this.windBase; this.gustTimer = rand(6, 9);
+    this.missRun = 0; this.heat = 0; this.overheated = false; this.reloadMax = PLAYER_RELOAD; this.lastTaunt = -99; this.repairNoted = false; this.repairText = 0; this.repairing = false;
     this.fired = 0; this.landed = 0; this.bonus = 0; this.streak = 0; this.endTimer = 0; this.endReason = null; this.dryTimer = 0;
     this.hits = { magazine: 0, waterline: 0, cabin: 0, sails: 0, hull: 0 };
     this.aim = { angle: 38, power: 0.72 }; this.held.clear(); this.firing = false; this.aimPoint = null;
@@ -234,7 +249,7 @@ export class Scene {
   // ─── Geometry ──────────────────────────────────────────────────────
   private updatePose(ship: Ship) {
     // Rivals tack back and forth, so a parked aim drifts off target.
-    if (!ship.isPlayer && this.rival && ship.sinking === 0) ship.x = 800 + Math.sin(this.t * 0.42 + ship.phase) * this.rival.drift * (ship.sailTears >= 4 ? 0.4 : 1);
+    if (!ship.isPlayer && this.rival && ship.sinking === 0) ship.x = 785 + (Math.sin(this.t * 0.47 + ship.phase) * 0.68 + Math.sin(this.t * 1.21 + ship.phase * 2.3) * 0.32) * this.rival.drift * (ship.sailTears >= 4 ? 0.4 : 1);
     const calm = this.reducedMotion ? 0 : 1;
     const sag = (1 - ship.hp / ship.maxHp) * 8;
     ship.pose = {
@@ -262,10 +277,19 @@ export class Scene {
   private tryFire() {
     const p = this.player;
     if (this.mode !== "battle" || this.paused || this.intro > 0 || this.endReason || p.reload > 0 || p.ammo <= 0) return false;
-    const speed = 360 + this.aim.power * 560, a = this.aim.angle * Math.PI / 180, m = this.muzzle(p, this.aim.angle);
+    // A hot barrel throws wild: spray and pray scatters, deliberate shots fly true.
+    const wild = this.heat * this.heat;
+    const speed = (360 + this.aim.power * 560) * (1 + gauss() * (0.022 + wild * 0.11));
+    const a = (this.aim.angle + gauss() * (0.9 + wild * 9)) * Math.PI / 180, m = this.muzzle(p, this.aim.angle);
     this.shots.push({ x: m.x, y: m.y, vx: Math.cos(a) * speed, vy: -Math.sin(a) * speed, owner: "player", rot: 0, spin: rand(-9, 9),
-      skips: 0, tore: false, alive: true, age: 0, hue: (this.fired * 47) % 360 });
-    p.ammo--; this.fired++; p.reload = PLAYER_RELOAD * (1 + p.sailTears * 0.15); p.recoil = 1; p.flash = 1;
+      skips: 0, tore: false, alive: true, age: 0, hue: (this.fired * 47) % 360, close: 999 });
+    p.ammo--; this.fired++; p.reload = this.reloadMax = PLAYER_RELOAD * (1 + p.sailTears * 0.15); p.recoil = 1; p.flash = 1;
+    this.heat = Math.min(1, this.heat + 0.25); this.lastShot = this.t;
+    if (this.heat >= 1) {
+      this.overheated = true; p.reload = this.reloadMax = 2.6;
+      this.floatText("OVERHEATED!", m.x + 40, m.y - 60, "#ff3d6e", 26); this.callout("Cannon overheated! Let it cool, then aim.");
+      for (let i = 0; i < 20; i++) this.spawn({ x: m.x, y: m.y, vx: rand(-40, 40), vy: -rand(40, 120), life: rand(0.8, 1.6), size: rand(8, 16), color: "rgba(230,230,240,", kind: "smoke", grav: -20 });
+    }
     this.muzzleBlast(m, a, 1);
     this.addShake(3); this.opts.onSound("fire");
     return true;
@@ -273,8 +297,8 @@ export class Scene {
   private enemyFire() {
     const e = this.enemy!, p = this.player, r = this.rival!;
     if (e.ammo <= 0) return;
-    const zone = Math.random() < 0.12 ? "magazine" : Math.random() < 0.3 ? "cabin" : "hull";
-    const targetLocal = zone === "magazine" ? { x: 17, y: -18 } : zone === "cabin" ? { x: -100, y: -66 } : { x: rand(-60, 90), y: -30 };
+    const roll = Math.random(), zone = roll < 0.1 ? "magazine" : roll < 0.32 ? "waterline" : roll < 0.5 ? "cabin" : "hull";
+    const targetLocal = zone === "magazine" ? { x: 17, y: -18 } : zone === "cabin" ? { x: -104, y: -68 } : zone === "waterline" ? { x: Math.random() < 0.5 ? -80 : 52, y: -5 } : { x: rand(-60, 90), y: -30 };
     const target = this.toWorld(p, targetLocal.x, targetLocal.y);
     const angle = rand(24, 52), a = angle * Math.PI / 180;
     const m0 = this.muzzle(e, angle);
@@ -289,9 +313,9 @@ export class Scene {
     speed *= 1 + gauss() * r.spread * (1 + e.sailTears * 0.35);
     e.angle = angle;
     this.shots.push({ x: m0.x, y: m0.y, vx: -Math.cos(a) * speed, vy: -Math.sin(a) * speed, owner: "enemy", rot: 0, spin: 0,
-      skips: 0, tore: false, alive: true, age: 0, hue: 0 });
+      skips: 0, tore: false, alive: true, age: 0, hue: 0, close: 999 });
     e.ammo--; e.recoil = 1; e.flash = 1;
-    e.reload = r.reload * (1 + e.sailTears * 0.28) * rand(0.85, 1.2) * (e.sailTears >= 4 ? 1.5 : 1);
+    e.reload = r.reload * (1 + e.sailTears * 0.28) * rand(0.85, 1.2) * (e.sailTears >= 4 ? 1.5 : 1) * (e.desperate ? 0.62 : 1);
     this.muzzleBlast(m0, Math.PI - a, -1);
     this.opts.onSound("enemyFire");
   }
@@ -316,7 +340,15 @@ export class Scene {
     if (this.intro > 0) { this.intro -= dt; this.emitHud(false, dt); return; }
 
     const p = this.player, e = this.enemy!;
-    this.wind = this.windBase + Math.sin(this.t * 0.23) * 12;
+    // The wind shifts every few seconds, so the arc that worked a moment ago misses now.
+    this.gustTimer -= dt;
+    if (this.gustTimer <= 0 && !this.endReason) {
+      const next = Math.round(rand(-65, 65)), shift = next - this.windTarget;
+      this.windTarget = next; this.gustTimer = rand(5.5, 9.5);
+      if (Math.abs(shift) > 18) { this.callout(`Wind shift! ${Math.abs(next)} ${next >= 0 ? "toward them" : "in your face"}.`); this.floatText("WIND SHIFT!", VIEW_W / 2, 170, "#7ff6ff", 26); }
+    }
+    this.windBase += (this.windTarget - this.windBase) * Math.min(1, dt * 1.4);
+    this.wind = this.windBase + Math.sin(this.t * 0.9) * 7;
     const turn = 70 * dt, pump = 0.55 * dt;
     if (this.held.has("a") || this.held.has("arrowleft")) this.aim.angle = clamp(this.aim.angle + turn, ANGLE_MIN, ANGLE_MAX);
     if (this.held.has("d") || this.held.has("arrowright")) this.aim.angle = clamp(this.aim.angle - turn, ANGLE_MIN, ANGLE_MAX);
@@ -330,11 +362,15 @@ export class Scene {
         if (ship.leak) ship.hp -= ship.leak * dt;
         if (ship.fire > 0) { ship.fire -= dt; ship.hp -= 2.2 * dt; }
       }
+      if (!ship.isPlayer) this.stepRepair(ship, dt);
+      else ship.leak = Math.max(0, ship.leak - 0.12 * dt);
       if (ship.hp <= 0 && ship.sinking === 0 && !this.endReason) {
         ship.hp = 0; this.endReason = ship.isPlayer ? "destroyed" : "sunk"; this.endTimer = 2.6;
         this.opts.onSound("boom"); this.explode(this.toWorld(ship, 0, -40), 1.4); this.callout(ship.isPlayer ? "Your ship is going down!" : `${this.rival!.ship} is sinking!`);
       }
     }
+    this.heat = Math.max(0, this.heat - dt * (this.t - this.lastShot < 0.8 ? 0.12 : 0.6));
+    if (this.overheated && p.reload <= 0) { this.overheated = false; this.heat = 0.45; }
     if (this.firing && !this.endReason) this.tryFire();
     if (!this.endReason && e.reload <= 0 && e.hp > 0) this.enemyFire();
 
@@ -367,6 +403,25 @@ export class Scene {
     this.emitHud(false, dt);
   }
 
+  /** Rivals patch holes and bail water whenever the pressure lets up. */
+  private stepRepair(ship: Ship, dt: number) {
+    const r = this.rival!;
+    this.repairing = false;
+    if (this.endReason || ship.hp <= 0) return;
+    if (!ship.desperate && ship.hp < ship.maxHp * 0.35) {
+      ship.desperate = true; this.callout(`${r.name} is desperate: firing much faster!`); this.floatText("DESPERATE!", ship.pose.cx, ship.pose.cy - 250, "#ff3d6e", 28);
+    }
+    if (this.t - ship.lastHit < 1.4 || ship.fire > 0) return;
+    ship.leak = Math.max(0, ship.leak - 0.45 * dt);
+    if (ship.hp >= ship.maxHp) return;
+    this.repairing = true;
+    ship.hp = Math.min(ship.maxHp, ship.hp + r.regen * dt);
+    if (!this.repairNoted) { this.repairNoted = true; this.callout(`${r.name}'s crew patches the hull whenever you stop hitting it!`); }
+    this.repairText -= dt;
+    if (this.repairText <= 0) { this.repairText = 1.6; this.floatText("PATCHING...", ship.pose.cx, ship.pose.cy - 120, "#39ff88", 18); }
+    if (Math.random() < (this.reducedMotion ? 0.05 : 0.25)) { const w = this.toWorld(ship, rand(-100, 110), rand(-50, 0)); this.spawn({ x: w.x, y: w.y, vx: rand(-20, 20), vy: -rand(20, 50), life: 0.6, size: 3, color: "#39ff88", kind: "spark", grav: 0 }); }
+  }
+
   private finish() {
     const won = this.endReason === "sunk" || (this.endReason === "surrender" && this.player.hp > 0);
     this.mode = "over"; this.firing = false;
@@ -388,7 +443,7 @@ export class Scene {
           ? { x: s.x, y: s.y, vx: rand(-15, 15), vy: rand(-15, 15), life: rand(0.25, 0.5), size: rand(4, 8), color: `hsla(${(s.hue + s.age * 360) % 360},100%,62%,`, kind: "smoke", grav: 0 }
           : { x: s.x, y: s.y, vx: rand(-10, 10), vy: rand(-10, 10), life: rand(0.2, 0.4), size: rand(3, 6), color: "rgba(255,120,60,", kind: "smoke", grav: 0 });
       }
-      if (s.x < -80 || s.x > VIEW_W + 80 || s.y > VIEW_H + 40) { s.alive = false; if (s.owner === "player") this.miss(); }
+      if (s.x < -80 || s.x > VIEW_W + 80 || s.y > VIEW_H + 40) { s.alive = false; if (s.owner === "player") this.miss(s); }
     }
     this.shots = this.shots.filter(s => s.alive);
   }
@@ -402,7 +457,7 @@ export class Scene {
     }
     if (this.kraken && this.kraken.points.some(k => Math.hypot(k.x - s.x, k.y - s.y) < 22)) {
       s.alive = false; this.floatText("KRAKEN SNACK!", s.x, s.y - 20, "#d58cff", 22); this.splash(s.x, this.surface(s.x), 0.7);
-      this.opts.onSound("kraken"); if (s.owner === "player") this.miss(); return;
+      this.opts.onSound("kraken"); if (s.owner === "player") this.miss(s); return;
     }
     if (s.owner === "player") {
       for (const g of this.gulls) if (g.alive && Math.hypot(g.x - s.x, g.y - s.y) < 24) {
@@ -419,9 +474,13 @@ export class Scene {
     const target = s.owner === "player" ? e : p;
     if (target.sinking === 0 && target.hp > 0) {
       const local = this.toLocal(target, s.x, s.y), zone = zoneAt(target, local);
+      if (s.owner === "player") {
+        const dx = Math.max(-130 - local.x, 0, local.x - 140), dy = Math.max(-84 - local.y, 0, local.y - 26);
+        s.close = Math.min(s.close, Math.hypot(dx, dy) * target.scale);
+      }
       if (zone === "sails") {
         if (!s.tore) {
-          s.tore = true; target.sailTears = Math.min(4, target.sailTears + 1); target.hp -= ZONES.sails.damage;
+          s.tore = true; target.sailTears = Math.min(4, target.sailTears + 1); target.hp -= ZONES.sails.damage; target.lastHit = this.t;
           for (let i = 0; i < 10; i++) this.spawn({ x: s.x, y: s.y, vx: rand(-100, 100), vy: rand(-80, 80), life: rand(0.5, 1), size: rand(3, 6), color: target.look.sail, kind: "feather", grav: 80 });
           if (s.owner === "player") { this.hits.sails++; this.floatText(target.sailTears >= 4 ? "MAST SNAPPED!" : "SAILS TORN!", s.x, s.y - 16, "#fff", 22); this.callout(target.sailTears >= 4 ? "Their mast is down. Reload crawls." : "Sails torn: their reload slows."); }
           this.opts.onSound("tear");
@@ -436,7 +495,7 @@ export class Scene {
         this.splash(s.x, surf, 0.45); this.floatText(s.skips > 1 ? `SKIP x${s.skips}!` : "SKIP!", s.x, surf - 30, "#7ff6ff", 20); this.opts.onSound("skip");
       } else {
         s.alive = false; this.splash(s.x, surf, 1); this.opts.onSound("splash");
-        if (s.owner === "player") this.miss();
+        if (s.owner === "player") this.miss(s);
       }
     }
   }
@@ -446,8 +505,10 @@ export class Scene {
     const byPlayer = s.owner === "player";
     const info = ZONES[zone];
     let damage = info.damage;
-    if (byPlayer) { this.streak++; this.landed++; this.hits[zone]++; damage *= 1 + Math.min(this.streak - 1, 5) * 0.08; }
-    else damage *= 0.95;
+    if (byPlayer) {
+      this.streak++; this.landed++; this.hits[zone]++; this.missRun = 0; ship.lastHit = this.t;
+      damage *= 1 + Math.min(this.streak - 1, 5) * 0.1;
+    } else { damage *= 1.3; if (Math.random() < 0.3) this.taunt(); }
     ship.hp -= damage;
     ship.holes.push({ x: local.x + rand(-3, 3), y: local.y + rand(-3, 3), r: zone === "magazine" ? 16 : rand(6, 10) });
     if (ship.holes.length > 26) ship.holes.shift();
@@ -466,9 +527,20 @@ export class Scene {
     }
     if (byPlayer && info.bonus) this.addBonus(info.bonus, at.x, at.y - 70, zone === "cabin" ? "PLUNDER!" : "SALVAGE!");
     if (byPlayer && this.streak >= 3) this.floatText(`STREAK x${this.streak}`, at.x + 30, at.y - 8, "#ccff00", 18);
+    if (byPlayer && this.streak > 0 && this.streak % 5 === 0) this.addBonus(2, at.x, at.y - 100, "HOT STREAK!");
     if (!byPlayer) this.addShake(8);
   }
-  private miss() { this.streak = 0; }
+  private miss(s: Shot) {
+    if (this.streak >= 3) this.floatText("STREAK LOST", this.player.pose.cx + 60, 330, "#ff3d6e", 18);
+    this.streak = 0; this.missRun++;
+    if (s.close < 28 && s.close > 0) this.floatText(["SO CLOSE!", "ARGH! INCHES!", "SHAVED THE PAINT!"][Math.floor(Math.random() * 3)], s.x, Math.min(s.y, SEA_Y) - 30, "#ffb627", 22);
+    if (this.missRun >= 3) this.taunt();
+  }
+  private taunt() {
+    if (!this.rival || this.t - this.lastTaunt < 7 || this.endReason) return;
+    this.lastTaunt = this.t; this.missRun = 0;
+    this.callout(this.rival.taunts[Math.floor(Math.random() * this.rival.taunts.length)]);
+  }
   private addBonus(n: number, x: number, y: number, label: string) {
     this.bonus += n; this.floatText(`${label} +${n}`, x, y, "#ccff00", 24); this.opts.onSound("bonus");
   }
@@ -577,7 +649,7 @@ export class Scene {
     this.opts.onHud({
       playerHp: Math.max(0, this.player.hp), playerMax: this.player.maxHp, enemyHp: Math.max(0, e?.hp ?? 0), enemyMax: e?.maxHp ?? 1,
       ammo: this.player.ammo, enemyAmmo: e?.ammo ?? 0, wind: Math.round(this.wind), angle: Math.round(this.aim.angle), power: Math.round(this.aim.power * 100),
-      streak: this.streak, bonus: this.bonus,
+      streak: this.streak, bonus: this.bonus, repairing: this.repairing, desperate: Boolean(e?.desperate), heat: Math.round(this.heat * 100), overheated: this.overheated,
       status: this.intro > 0 ? "intro" : this.endReason ? "ending" : this.mode,
     });
   }
@@ -612,6 +684,7 @@ export class Scene {
     this.canvas.dataset.ammo = String(this.player.ammo);
     this.canvas.dataset.enemyHp = this.enemy ? this.enemy.hp.toFixed(1) : "";
     this.canvas.dataset.shots = String(this.shots.length);
+    this.canvas.dataset.playerHp = this.player.hp.toFixed(1);
   }
 
   private paintBackground() {
@@ -722,10 +795,10 @@ export class Scene {
     // Magazine hatch (bright target) or its blast scar.
     if (!ship.magazineBlown) {
       const pulse = 0.55 + Math.sin(this.t * 5) * 0.25;
-      ctx.fillStyle = "#3b1a0a"; ctx.fillRect(MAGAZINE[0], MAGAZINE[1], 34, 24);
-      ctx.fillStyle = "#c0392b"; ctx.beginPath(); ctx.ellipse(17, -18, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ffd23f"; ctx.font = "900 11px system-ui"; ctx.textAlign = "center"; ctx.save(); ctx.scale(ship.facing, 1); ctx.fillText("TNT", 17 * ship.facing, -14); ctx.restore();
-      ctx.strokeStyle = `rgba(255,210,63,${pulse})`; ctx.lineWidth = 2.5; ctx.strokeRect(MAGAZINE[0] - 2, MAGAZINE[1] - 2, 38, 28);
+      ctx.fillStyle = "#3b1a0a"; ctx.fillRect(MAGAZINE[0], MAGAZINE[1], MAGAZINE[2] - MAGAZINE[0], MAGAZINE[3] - MAGAZINE[1]);
+      ctx.fillStyle = "#c0392b"; ctx.beginPath(); ctx.ellipse(17, -18, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffd23f"; ctx.font = "900 9px system-ui"; ctx.textAlign = "center"; ctx.save(); ctx.scale(ship.facing, 1); ctx.fillText("TNT", 17 * ship.facing, -15); ctx.restore();
+      ctx.strokeStyle = `rgba(255,210,63,${pulse})`; ctx.lineWidth = 2.5; ctx.strokeRect(MAGAZINE[0] - 2, MAGAZINE[1] - 2, MAGAZINE[2] - MAGAZINE[0] + 4, MAGAZINE[3] - MAGAZINE[1] + 4);
     }
     // Waterline weak points: cracked planks.
     for (const r of WATERLINE) {
@@ -742,9 +815,9 @@ export class Scene {
     }
     ctx.restore();
     // Cabin windows (stern).
-    ctx.fillStyle = "#2a1406"; ctx.fillRect(-124, -78, 46, 22);
-    for (let i = 0; i < 3; i++) { ctx.fillStyle = Math.sin(this.t * 3 + i) > -0.6 ? "#ffe28a" : "#ffb84d"; ctx.fillRect(-120 + i * 15, -74, 10, 14); }
-    ctx.strokeStyle = "#ff9ff3"; ctx.globalAlpha = 0.5 + Math.sin(this.t * 4) * 0.2; ctx.lineWidth = 2; ctx.strokeRect(CABIN[0] + 2, CABIN[1] + 2, 54, 30); ctx.globalAlpha = 1;
+    ctx.fillStyle = "#2a1406"; ctx.fillRect(-124, -78, 38, 20);
+    for (let i = 0; i < 3; i++) { ctx.fillStyle = Math.sin(this.t * 3 + i) > -0.6 ? "#ffe28a" : "#ffb84d"; ctx.fillRect(-121 + i * 12, -75, 8, 13); }
+    ctx.strokeStyle = "#ff9ff3"; ctx.globalAlpha = 0.5 + Math.sin(this.t * 4) * 0.2; ctx.lineWidth = 2; ctx.strokeRect(CABIN[0], CABIN[1], CABIN[2] - CABIN[0], CABIN[3] - CABIN[1]); ctx.globalAlpha = 1;
     // Rails and lanterns.
     ctx.strokeStyle = L.trim; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-128, -94); ctx.lineTo(-72, -94); ctx.moveTo(-66, -62); ctx.lineTo(96, -62); ctx.stroke();
     for (let x = -60; x <= 96; x += 12) { ctx.beginPath(); ctx.moveTo(x, -62); ctx.lineTo(x, -52); ctx.stroke(); }
@@ -819,16 +892,21 @@ export class Scene {
     const p = this.player, speed = 360 + this.aim.power * 560, a = this.aim.angle * Math.PI / 180, m = this.muzzle(p, this.aim.angle);
     let x = m.x, y = m.y, vx = Math.cos(a) * speed, vy = -Math.sin(a) * speed;
     const dt = 1 / 30;
-    for (let i = 1; i <= 16; i++) {
+    for (let i = 1; i <= 10; i++) {
       for (let k = 0; k < 2; k++) { vy += GRAVITY * dt / 2; x += vx * dt / 2; y += vy * dt / 2; }
-      if (i % 1 === 0) { ctx.fillStyle = `rgba(255,255,255,${0.85 - i * 0.05})`; ctx.beginPath(); ctx.arc(x, y, 4 - i * 0.15, 0, Math.PI * 2); ctx.fill(); }
+      if (i % 1 === 0) { ctx.fillStyle = `rgba(255,255,255,${0.9 - i * 0.08})`; ctx.beginPath(); ctx.arc(x, y, 4 - i * 0.2, 0, Math.PI * 2); ctx.fill(); }
     }
     // Power arc around the cannon.
     const pivot = this.muzzlePivot(p);
     ctx.lineWidth = 6; ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 58, -Math.PI * 0.5, 0); ctx.stroke();
     const hue = 120 - this.aim.power * 120;
     ctx.strokeStyle = `hsl(${hue},100%,55%)`; ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 58, -Math.PI * 0.5, -Math.PI * 0.5 + this.aim.power * Math.PI * 0.5); ctx.stroke();
-    if (p.reload > 0) { ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 68, -Math.PI / 2, -Math.PI / 2 + (1 - p.reload / PLAYER_RELOAD) * Math.PI * 2); ctx.stroke(); }
+    if (p.reload > 0) { ctx.strokeStyle = this.overheated ? "#ff3d6e" : "rgba(255,255,255,0.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 68, -Math.PI / 2, -Math.PI / 2 + (1 - p.reload / this.reloadMax) * Math.PI * 2); ctx.stroke(); }
+    if (this.heat > 0.02) {
+      ctx.lineWidth = 6; ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 58, Math.PI, Math.PI * 1.5); ctx.stroke();
+      ctx.strokeStyle = this.heat > 0.75 ? "#ff3d6e" : this.heat > 0.45 ? "#ff9f1c" : "#ffd23f";
+      ctx.beginPath(); ctx.arc(pivot.x, pivot.y, 58, Math.PI * 1.5 - this.heat * Math.PI * 0.5, Math.PI * 1.5); ctx.stroke();
+    }
     if (this.aimPoint) {
       ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(this.aimPoint.x, this.aimPoint.y, 10, 0, Math.PI * 2);
       ctx.moveTo(this.aimPoint.x - 16, this.aimPoint.y); ctx.lineTo(this.aimPoint.x - 5, this.aimPoint.y); ctx.moveTo(this.aimPoint.x + 5, this.aimPoint.y); ctx.lineTo(this.aimPoint.x + 16, this.aimPoint.y); ctx.stroke();
