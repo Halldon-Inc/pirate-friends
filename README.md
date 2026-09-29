@@ -1,3 +1,18 @@
+# Pirate Friends (Rare Friends Vibeathon)
+
+This repository is a copy of [FriendSDK v0.1.3](https://github.com/spokesz/friendsdk) with one game added:
+**[games/pirate-friends](games/pirate-friends)**. Read its README for rules, controls and economy.
+
+```sh
+npm ci
+npm run build
+npm run dev:game -- games/pirate-friends
+```
+
+Everything below is the unmodified FriendSDK README.
+
+---
+
 # FriendSDK v0.1.3
 
 Build a playable Rare Friends game with your AI coding agent. You create the

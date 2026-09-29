@@ -1,0 +1,8 @@
+{
+  "name": "Pirate Friends",
+  "consumable": "Powder kegs",
+  "price": "1000000000000000000",
+  "outcomes": [
+    { "name": "Keg buyback reserve (1 RF per keg, not offered in this preview)", "chanceBps": 10000, "reward": "1000000000000000000" }
+  ]
+}
