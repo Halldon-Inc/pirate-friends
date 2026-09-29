@@ -30,11 +30,11 @@ export const RIVALS: readonly Rival[] = [
     taunts: ["Bess: Ye couldn't hit the sea from a rowboat!", "Bess: Is that a cannon or a pea shooter?", "Bess: My gran shoots straighter, and she's a barnacle!", "Bess: Keep feedin' the fishes, sweetie!"],
     look: { hull: "#e0913f", hullDark: "#8a4a17", stripe: "#3ec8ff", trim: "#fff1a8", sail: "#fff0f6", sailTrim: "#ff5fae", flag: "#ff5fae" } },
   { id: "rook", name: "Redbeard Rook", ship: "The Crimson Gull", difficulty: "Medium", blurb: "Reads the wind, tacks hard, repairs fast. Tear his sails early.",
-    stake: 40, hp: 185, reload: 1.3, spread: 0.068, windSkill: 0.65, scale: 1, drift: 76, regen: 3.6,
+    stake: 40, hp: 168, reload: 1.42, spread: 0.076, windSkill: 0.65, scale: 1, drift: 76, regen: 3.1,
     taunts: ["Rook: Ha! The wind's on MY side, landlubber!", "Rook: Missed by a mile, and a mile's a long way!", "Rook: I've seen better aim from a drunk parrot!", "Rook: Those Generations were lovely. Send more!"],
     look: { hull: "#9b3b2c", hullDark: "#4e1810", stripe: "#ffb627", trim: "#ffe08a", sail: "#ffe3c2", sailTrim: "#e63946", flag: "#e63946" } },
   { id: "admiral", name: "The Dread Admiral", ship: "Leviathan's Grin", difficulty: "Hard", blurb: "A floating fortress with a crew of carpenters. Find the magazine or go home broke.",
-    stake: 60, hp: 210, reload: 1.3, spread: 0.062, windSkill: 0.9, scale: 1.12, drift: 86, regen: 4.8,
+    stake: 60, hp: 182, reload: 1.68, spread: 0.07, windSkill: 0.9, scale: 1.12, drift: 86, regen: 3.7,
     taunts: ["Admiral: Pathetic.", "Admiral: Your Generations make fine ballast.", "Admiral: I've sunk better Friends before breakfast.", "Admiral: Do try to aim, captain."],
     look: { hull: "#34324a", hullDark: "#14131f", stripe: "#b388ff", trim: "#ffd23f", sail: "#2a2340", sailTrim: "#ff3d6e", flag: "#111" } },
 ];

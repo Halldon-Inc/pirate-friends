@@ -49,7 +49,7 @@ Missing breaks the streak.
 | Mechanic | Rule |
 | --- | --- |
 | Cannon heat | Each shot adds 25% heat; heat cools slowly while you keep firing and fast after 0.8 s of rest. Heat scatters your shots (angle and power spread grow with heat squared). At 100% the cannon overheats and locks for 2.6 s. Spamming sprays; deliberate shots fly true. |
-| Repairs | If you stop hitting the rival for 1.4 s, their crew patches hull (2.4 / 3.6 / 4.8 per second for Bess / Rook / Admiral) and bails out leaks. |
+| Repairs | If you stop hitting the rival for 1.4 s, their crew patches hull (2.4 / 3.1 / 3.7 per second for Bess / Rook / Admiral) and bails out leaks. |
 | Desperation | Below 35% hull a rival fires 38% faster. |
 | Wind shifts | Every 5.5 to 9.5 s the wind swings to a new value between 65 against you and 65 behind you. |
 | Moving target | Rival ships tack back and forth on an irregular course. |
@@ -75,8 +75,8 @@ Salvage and plunder are paid only if you win; they go down with a losing ship.
 | Rival | Ship | Stake | Hull | Reload | Aim |
 | --- | --- | --- | --- | --- | --- |
 | Barnacle Bess (easy) | The Soggy Biscuit | 30 | 137 | 1.5 s | loose, reads a third of the wind, drifts 62 px |
-| Redbeard Rook (medium) | The Crimson Gull | 40 | 185 | 1.3 s | reads most of the wind, drifts 76 px |
-| The Dread Admiral (hard) | Leviathan's Grin | 60 | 210 | 1.3 s | tight, reads almost all the wind, drifts 86 px |
+| Redbeard Rook (medium) | The Crimson Gull | 40 | 168 | 1.42 s | reads most of the wind, drifts 76 px |
+| The Dread Admiral (hard) | Leviathan's Grin | 60 | 182 | 1.68 s | tight, reads almost all the wind, drifts 86 px |
 
 Your ship has 100 hull and reloads every 0.42 s.
 
@@ -87,10 +87,8 @@ Measured with the bots in `bot.mjs` on the SDK mock harness (one run per line, f
 | Deliberate aim, a shot every 1.25 s | Bess | Won with 20 of 30 shots, 57 hull left, net +17 |
 | Deliberate aim, a shot every 0.8 s | Bess | Won with 19 of 30 shots, 60 hull left, net +13 |
 | Holding fire on one spot | Bess | Won with the last of 30 shots, net +4 |
-| Deliberate aim, 1.25 s | Rook | Sunk after 27 of 40 shots |
-| Deliberate aim, 0.8 s | Rook | Won with 38 of 40 shots, 27 hull left |
-| Deliberate aim, 1.25 s | Admiral | Sunk after 25 of 60 shots |
-| Deliberate aim, 0.8 s | Admiral | Won with 40 of 60 shots, 5.8 hull left |
+| Deliberate aim, 1.25 s and 0.8 s (4 runs) | Rook | Won all 4 with 25 to 27 of 40 shots, 30 to 54 hull left |
+| Deliberate aim, 1.25 s and 0.8 s (4 runs) | Admiral | Won 3 of 4 with 38 to 43 of 60 shots, 1 to 18 hull left; sunk once |
 
 ## Economy (all simulated in this preview)
 
